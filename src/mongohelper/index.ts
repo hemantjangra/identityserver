@@ -1,16 +1,21 @@
-import * as mongoose from "mongoose";
+import mongoose from "mongoose";
 
-const mongoConnection = async() => {
-    try {
-         await mongoose.connect(`${process.env.DB_URL}`, {
-            dbName: process.env.DB_NAME,
+export default (db: any, dbName: any) =>{
+    const connect = () =>{
+        mongoose.connect(db,{
+            dbName: dbName,
             useNewUrlParser: true,
             useCreateIndex: true,
             useFindAndModify: false,
             bufferCommands: false
+        }).then(()=>{
+            console.log(`Successfully connected to ${dbName}`); //add logger here
+        }).catch(error =>{
+           console.log(`Error occurred while connecting to ${dbName}`);
+           return process.exit(1);
         });
-    }catch (error) {
-      return;
+        
     };
-    
-    export default mongoConnection();
+    connect();
+    mongoose.connection.on("disconnected", connect);
+}
