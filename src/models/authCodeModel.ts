@@ -1,7 +1,7 @@
 import mongoose, {Schema, Document} from 'mongoose';
-import uuidv4 from 'uuid/v4';
+import v4 from 'uuid/v4';
 
-export interface AuthCodeModel extends Document{
+export interface AuthCodeInterface extends Document{
     code: string,
     createdAt: Date,
     consumed: boolean,
@@ -11,7 +11,7 @@ export interface AuthCodeModel extends Document{
 }
 
 const AuthCodeSchema: Schema = new Schema<any>({
-    code:{type: String, default: uuidv4()},
+    code:{type: String, default: v4},
     createdAt:{type: Date, default: Date.now(), expires: '10m'},
     consumed:{type: Boolean, default: false},
     clientId: {type: String},
@@ -19,6 +19,6 @@ const AuthCodeSchema: Schema = new Schema<any>({
     redirectUri:{type: String}
 });
 
-const AuthCodeModel = mongoose.model<AuthCodeModel>("AuthCodeModel", AuthCodeSchema);
+const AuthCodeModel = mongoose.model<AuthCodeInterface>("AuthCodeModel", AuthCodeSchema);
 
 export default AuthCodeModel;

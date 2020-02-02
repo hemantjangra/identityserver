@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import bodyParser from 'body-parser';
 import connect from './mongohelper';
 import { handle } from './controllers/authorize_controller';
+import Client, {ClientInterface} from './models/client';
 
 dotenv.config();
 
@@ -12,6 +13,9 @@ const port = process.env.PORT || 5000;
 
 const db = process.env.DB_URL;
 const dbName = process.env.DB_NAME;
+
+console.log(`DB url is ${db}`);
+console.log(`DB name is ${dbName}`);
 
 if(db && dbName){
    connect(db, dbName);
@@ -24,7 +28,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.get('/', (req, res) =>{
-   res.send("Hello World"); 
+   let client : ClientInterface = new Client({
+      name: 'Test',
+      userId: '1',
+      redirectUri:'http://localhost:5000/callback',
+      scope: ''
+   });
+   client.save((error)=>{
+      res.json(client);
+   });
 });
 
 app.get('/authorize', handle);
