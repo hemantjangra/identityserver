@@ -3,26 +3,26 @@ import Client, {ClientInterface} from "../models/client";
 import AuthCodeModel, {AuthCodeInterface} from "../models/authCodeModel";
 import RefreshTokenModel, {RefreshTokenInterface} from "../models/refreshTokenModel";
 import TokenModel , {TokenModelInterface} from "../models/tokenModel";
+import axios from 'axios';
 
 export const handle = (request: Request, res: Response) => {
-    const responseType = request.query.response_type;
-    const clientId = request.query.client_id;
+    const {response_type, client_id, redirect_uri, scope, state} = request.query;
 
-    if (!responseType) {
+    if (!response_type) {
         // cancel the request - we miss the response type
     }
 
-    if (responseType !== 'code') {
+    if (response_type !== 'code') {
         // notify the user about an unsupported response type
     }
 
-    if (!clientId) {
+    if (!client_id) {
         // cancel the request - client id is missing
     }
 
     Client.findOne({
-        clientId: clientId
-    }, (err, client) => {
+        clientId: client_id
+    }, (err, client: ClientInterface) => {
         if (err) {
             // handle the error by passing it to the middleware
         }
@@ -30,21 +30,17 @@ export const handle = (request: Request, res: Response) => {
         if (!client) {
             // cancel the request - the client does not exist
         }
-        const redirectUri = request.query.request_uri;
-        const { clientRedirectUri, clientScope, clientUserId } = redirectUri; 
-        if (redirectUri !== clientRedirectUri) {
+        if (redirect_uri !== client.redirectUri) {
             // cancel the request
         }
-
-        const scope = request.query.scope;
-        if (scope !== clientScope) {
+        if (scope !== client.scope) {
             // handle the scope
         }
 
         const authCode = new AuthCodeModel({
-            clientId: clientId,
-            userId: clientUserId,
-            redirectUri: redirectUri
+            clientId: client_id,
+            userId: client.userId,
+            redirectUri: redirect_uri
         });
         authCode.save(); //add promise and handle
 
@@ -53,8 +49,8 @@ export const handle = (request: Request, res: Response) => {
             state: state,
             code: authCode.code
         };
-        if (redirectUri) {
-            const redirect = `${redirectUri}?code=${response.code}${state === undefined ? '' : `&state=${state}`}`;
+        if (redirect_uri) {
+            const redirect = `${redirect_uri}?code=${response.code}${state === undefined ? '' : `&state=${state}`}`;
             res.redirect(redirect);
         }
         else{
@@ -103,7 +99,8 @@ export const handleToken = (request: Request, response: Response) =>{
              refreshTokenEntity.save(); //handle promise here
               
               const token: TokenModelInterface = new TokenModel({
-                  userId: userId
+                  userId: userId,
+                  refreshToken: refreshTokenEntity.token
               });
               token.save(); //handle promise here
               
@@ -112,4 +109,30 @@ export const handleToken = (request: Request, response: Response) =>{
           });
       });
   }
+};
+
+
+//this acts as client in same application and asks for token
+
+export const handleAuthCode = (request: Request, response: Response) =>{
+    const {code} = request.query;
+    if(!code){
+        //handle and return error
+    }
+    const client_id ='2b01678f-6335-4aae-ba5f-09f1f50619dd'; //meant to be with client
+    const grant_type = 'authorization_code';
+    const redirect_uri = 'http://localhost:5000';
+    
+    const tokenRequestUrl =`http://localhost:5000/token`;
+    console.log(tokenRequestUrl);
+    axios.post(tokenRequestUrl, {
+        client_id: client_id,
+        code: code,
+        grant_type: grant_type,
+        redirect_uri: redirect_uri
+    }).
+    then(res=> {
+        response.json(res.data);
+    }).
+    catch( err => response.json(err));
 };

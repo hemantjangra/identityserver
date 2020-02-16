@@ -2,7 +2,7 @@ import express, {Application} from "express";
 import dotenv from "dotenv";
 import bodyParser from 'body-parser';
 import connect from './mongohelper';
-import { handle } from './controllers/authorize_controller';
+import {handle, handleAuthCode, handleToken} from './controllers/authorize_controller';
 import Client, {ClientInterface} from './models/client';
 
 dotenv.config();
@@ -27,19 +27,26 @@ else{
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.get('/', (req, res) =>{
-   let client : ClientInterface = new Client({
-      name: 'Test',
-      userId: '1',
-      redirectUri:'http://localhost:5000/callback',
-      scope: ''
-   });
-   client.save((error)=>{
-      res.json(client);
-   });
+// app.get('/', (req, res) =>{
+//    let client : ClientInterface = new Client({
+//       name: 'Test',
+//       userId: '1',
+//       redirectUri:'http://localhost:5000/callback',
+//       scope: ''
+//    });
+//    client.save((error)=>{
+//       res.json(client);
+//    });
+//});
+app.get('/', (req, res) => {
+   res.json('working');
 });
 
 app.get('/authorize', handle);
+
+app.post('/token', handleToken);
+
+app.get('/handleAuthCode', handleAuthCode);
 
 app.listen(port, () =>{
    console.log(`Listening to port ${port}`);
