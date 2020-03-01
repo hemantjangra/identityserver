@@ -3,7 +3,9 @@ import dotenv from "dotenv";
 import bodyParser from 'body-parser';
 import connect from './mongohelper';
 import {handle, handleAuthCode, handleToken} from './controllers/authorize_controller';
-import Client, {ClientInterface} from './models/client';
+import {rootHandler} from './controllers/root_controller';
+import {Request, Response} from 'express';
+import AppError from './extensions/appError';
 
 dotenv.config();
 
@@ -27,20 +29,7 @@ else{
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-// app.get('/', (req, res) =>{
-//    let client : ClientInterface = new Client({
-//       name: 'Test',
-//       userId: '1',
-//       redirectUri:'http://localhost:5000/callback',
-//       scope: ''
-//    });
-//    client.save((error)=>{
-//       res.json(client);
-//    });
-//});
-app.get('/', (req, res) => {
-   res.json('working');
-});
+app.get('/', rootHandler);
 
 app.get('/authorize', handle);
 
@@ -50,6 +39,11 @@ app.get('/handleAuthCode', handleAuthCode);
 
 app.listen(port, () =>{
    console.log(`Listening to port ${port}`);
+});
+
+app.use((error: AppError, req:Request, res: Response, next:Function)=>{
+   console.error(error.message);
+   res.status(error.status).send(error.message);
 });
 
 export default app;

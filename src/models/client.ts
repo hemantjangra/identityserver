@@ -7,17 +7,18 @@ export interface ClientInterface extends Document{
     createdAt?: Date,
     name: string,
     scope: string,
-    userId: string,
+    userId: number,
     redirectUri: string
 }
 
 const ClientSchema:Schema = new Schema({
+    _id:{type: String, default: v4, unique: true},
     clientId:{type: String, default: v4, unique: true},
     clientSecret:{type: String, default: v4, unique: true},
     createdAt:{type: Date, default: Date.now()},
-    name:{type: String, unique: true},
+    name:{type: String, unique: true, default:v4},
     scope:{type: String},
-    userId:{type: String},
+    userId:{type: Number, default:1},
     redirectUri:{type: String}
 });
 

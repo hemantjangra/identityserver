@@ -4,37 +4,43 @@ import AuthCodeModel, {AuthCodeInterface} from "../models/authCodeModel";
 import RefreshTokenModel, {RefreshTokenInterface} from "../models/refreshTokenModel";
 import TokenModel , {TokenModelInterface} from "../models/tokenModel";
 import axios from 'axios';
+import AppError from '../extensions/appError';
 
-export const handle = (request: Request, res: Response) => {
+export const handle = (request: Request, res: Response, next: Function) => {
     const {response_type, client_id, redirect_uri, scope, state} = request.query;
 
+    if (!client_id) {
+        const error:AppError = new AppError('client_id is not present in request', 400);
+        next(error);
+    }
+    
     if (!response_type) {
-        // cancel the request - we miss the response type
+        const error: AppError = new AppError(`response_type is not present in request for ClientId ${client_id}`, 400);
+        next(error);
     }
 
     if (response_type !== 'code') {
-        // notify the user about an unsupported response type
-    }
-
-    if (!client_id) {
-        // cancel the request - client id is missing
+        const error: AppError=new AppError(`response_type not present in request for ClientId ${client_id}`, 400);
     }
 
     Client.findOne({
         clientId: client_id
     }, (err, client: ClientInterface) => {
         if (err) {
-            // handle the error by passing it to the middleware
+            next(err);
         }
 
         if (!client) {
-            // cancel the request - the client does not exist
+            const error = new AppError(`No Client Found for ClientId ${client_id}`, 400);
+            next(error);
         }
         if (redirect_uri !== client.redirectUri) {
-            // cancel the request
+            const error = new AppError(`No redirect uri found in Database for ClientId ${client_id}`, 400);
+            next(error);
         }
         if (scope !== client.scope) {
-            // handle the scope
+            const error = new AppError(`No scope found in Database for ClientId ${client_id}`, 400);
+            next(error);
         }
 
         const authCode = new AuthCodeModel({
@@ -42,7 +48,10 @@ export const handle = (request: Request, res: Response) => {
             userId: client.userId,
             redirectUri: redirect_uri
         });
-        authCode.save(); //add promise and handle
+        authCode.save().catch(err => {
+            err.statusCode = 503;
+            next(err); 
+        });
 
         const state = request.query.state;
         const response = {

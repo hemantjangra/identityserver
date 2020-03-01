@@ -9,6 +9,7 @@ export interface RefreshTokenInterface extends Document{
 }
 
 const RefreshTokenSchema:Schema = new Schema<any>({
+    _id:{type: String, default: v4, unique: true},
    userId: {type: String},
    token:{type: String, default: v4},
    createdAt:{type:Date, default: Date.now()},

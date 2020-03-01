@@ -11,6 +11,7 @@ export interface AuthCodeInterface extends Document{
 }
 
 const AuthCodeSchema: Schema = new Schema<any>({
+    _id:{type: String, default: v4, unique: true},
     code:{type: String, default: v4},
     createdAt:{type: Date, default: Date.now(), expires: '10m'},
     consumed:{type: Boolean, default: false},

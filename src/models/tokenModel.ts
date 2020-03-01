@@ -1,5 +1,6 @@
 import mongoose, {Schema, Document} from 'mongoose';
 import {RefreshTokenInterface} from './refreshTokenModel';
+import v4 from 'uuid/v4';
 
 export interface TokenModelInterface extends Document{
     userId: string,
@@ -12,6 +13,7 @@ export interface TokenModelInterface extends Document{
 }
 
 const TokenModelSchema : Schema = new Schema<any>({
+    _id:{type: String, default: v4, unique: true},
    userId:{type: String},
    refreshToken: {type: String, unique: true},
    accessToken: {type: String, unique: true},
