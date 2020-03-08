@@ -2,6 +2,7 @@ import mongoose, {Schema, Document} from 'mongoose';
 import v4 from 'uuid/v4';
 
 export interface AuthCodeInterface extends Document{
+    _id: string,
     code: string,
     createdAt: Date,
     consumed: boolean,
@@ -18,7 +19,7 @@ const AuthCodeSchema: Schema = new Schema<any>({
     clientId: {type: String},
     userId:{type: String},
     redirectUri:{type: String}
-});
+},{_id:false});
 
 const AuthCodeModel = mongoose.model<AuthCodeInterface>("AuthCodeModel", AuthCodeSchema);
 

@@ -1,1 +1,2 @@
-export const clientDal = require('./clientDal');
+export const clientDal = require('./clientDAO');
+export const authDao = require('./authCodeDAO');

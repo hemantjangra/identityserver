@@ -5,10 +5,11 @@ import RefreshTokenModel, {RefreshTokenInterface} from "../models/refreshTokenMo
 import TokenModel , {TokenModelInterface} from "../models/tokenModel";
 import axios from 'axios';
 import AppError from '../../extensions/appError';
+import {clientDal, authDao} from "../DAL";
 
-export const handle = (request: Request, res: Response, next: Function) => {
+export const handle = async (request: Request, res: Response, next: Function) => {
     const {response_type, client_id, redirect_uri, scope, state} = request.query;
-
+    //TODO: to be moved to validators
     if (!client_id) {
         const error:AppError = new AppError('client_id is not present in request', 400);
         next(error);
@@ -22,38 +23,21 @@ export const handle = (request: Request, res: Response, next: Function) => {
     if (response_type !== 'code') {
         const error: AppError=new AppError(`response_type not present in request for ClientId ${client_id}`, 400);
     }
-
-    Client.findOne({
-        clientId: client_id
-    }, (err, client: ClientInterface) => {
-        if (err) {
-            next(err);
-        }
-
-        if (!client) {
-            const error = new AppError(`No Client Found for ClientId ${client_id}`, 400);
-            next(error);
-        }
+    try {
+        const client = await clientDal.findClientByClientId(client_id);
         if (redirect_uri !== client.redirectUri) {
-            const error = new AppError(`No redirect uri found in Database for ClientId ${client_id}`, 400);
-            next(error);
+            res.status(500);
         }
         if (scope !== client.scope) {
-            const error = new AppError(`No scope found in Database for ClientId ${client_id}`, 400);
-            next(error);
+            res.status(500);
         }
-
         const authCode = new AuthCodeModel({
             clientId: client_id,
             userId: client.userId,
             redirectUri: redirect_uri
         });
-        authCode.save().catch(err => {
-            err.statusCode = 503;
-            next(err); 
-        });
-
-        const state = request.query.state;
+        
+        const result = await authDao.saveAuthCode(authCode);
         const response = {
             state: state,
             code: authCode.code
@@ -65,7 +49,9 @@ export const handle = (request: Request, res: Response, next: Function) => {
         else{
             res.json(response);
         }
-    });
+    }catch (error) {
+        res.status(500);
+    }
 };
 
 export const handleToken = (request: Request, response: Response) =>{

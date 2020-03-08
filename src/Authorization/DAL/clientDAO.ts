@@ -76,5 +76,6 @@ const saveClient = async (clientData:ClientInterface) =>{
 
 module.exports = {
   findAllClients,
-  saveClient  
+  saveClient,
+  findClientByClientId
 };
