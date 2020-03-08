@@ -4,7 +4,7 @@ import AuthCodeModel, {AuthCodeInterface} from "../models/authCodeModel";
 import RefreshTokenModel, {RefreshTokenInterface} from "../models/refreshTokenModel";
 import TokenModel , {TokenModelInterface} from "../models/tokenModel";
 import axios from 'axios';
-import AppError from '../extensions/appError';
+import AppError from '../../extensions/appError';
 
 export const handle = (request: Request, res: Response, next: Function) => {
     const {response_type, client_id, redirect_uri, scope, state} = request.query;

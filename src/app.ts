@@ -2,8 +2,8 @@ import express, {Application} from "express";
 import dotenv from "dotenv";
 import bodyParser from 'body-parser';
 import connect from './mongohelper';
-import {handle, handleAuthCode, handleToken} from './controllers/authorize_controller';
-import {rootHandler} from './controllers/root_controller';
+import {handle, handleAuthCode, handleToken} from './Authorization/controllers/authorize.controller';
+import {rootHandler} from './Authorization/controllers/root.controller';
 import {Request, Response} from 'express';
 import AppError from './extensions/appError';
 
