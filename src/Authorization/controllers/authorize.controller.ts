@@ -5,7 +5,7 @@ import RefreshTokenModel, {RefreshTokenInterface} from "../models/refreshTokenMo
 import TokenModel , {TokenModelInterface} from "../models/tokenModel";
 import axios from 'axios';
 import AppError from '../../extensions/appError';
-import {clientDal, authDao} from "../DAL";
+import {clientDal, authDao, refreshTokenDao, tokenDao} from "../DAL";
 
 export const handle = async (request: Request, res: Response, next: Function) => {
     const {response_type, client_id, redirect_uri, scope, state} = request.query;
@@ -54,55 +54,42 @@ export const handle = async (request: Request, res: Response, next: Function) =>
     }
 };
 
-export const handleToken = (request: Request, response: Response) =>{
+export const handleToken = async (request: Request, response: Response, next: Function) =>{
   const {grant_type, code, redirect_uri, client_id} = request.body;
   if(!grant_type){
-      //cancel request no grant type
+      next(Error("grant type not found"));
   }
   if(grant_type === 'authorization_code'){
-      AuthCodeModel.findOne({
-          code: code
-      }, (error, authCode: AuthCodeInterface) =>{
-          if(error){
-              //handle error
-          }
-          if(!authCode){
-              //no valid record in db, handle it here
-          }
-          if(authCode?.consumed){
-              //token consumed cancel request
-          }
-          authCode.consumed = true;
-          authCode.save(); //handle promise
-          
-          if(authCode.redirectUri!==redirect_uri){
-              //cancel request here
-          }
-          Client.findOne({
-              clientId: client_id
-          }, (error, client: ClientInterface) =>{
-             if(error){
-                 //mismatch or not found
-             } 
-             if(!client){
-                 //mismatch or does not exist
-             }
-             const {userId} = authCode;
-             const refreshTokenEntity: RefreshTokenInterface = new RefreshTokenModel({
-                 userId: userId
-             });
-             refreshTokenEntity.save(); //handle promise here
-              
-              const token: TokenModelInterface = new TokenModel({
-                  userId: userId,
-                  refreshToken: refreshTokenEntity.token
-              });
-              token.save(); //handle promise here
-              
-              
-              response.json({...token});
-          });
-      });
+      try{
+        const authCode = await authDao.findAuthCodeByCode(code);
+        if(!authCode){
+            next(Error('no result found in collection'));
+        }
+        if(authCode.consumed){
+            next(Error('auth token is already consumed'));
+        }
+        authCode.consumed = true;
+        await clientDal.saveAuthCode(authCode);
+        if(authCode.redirectUri!==redirect_uri){
+            next(Error('Redirect url does not match with redirect url in auth code entity'));
+        }
+
+        const clientResult = await clientDal.findClientByClientId(client_id);
+        const {userId} = authCode;
+
+        const refreshTokenEntity: RefreshTokenInterface = new RefreshTokenModel({
+            userId: userId
+        });
+        const refreshTokenSaveResult = await refreshTokenDao.saveAuthCode(refreshTokenEntity);
+        const token: TokenModelInterface = new TokenModel({
+            userId: userId,
+            refreshToken: refreshTokenEntity.token
+        });
+        const tokenResult = await tokenDao.saveToken(token); 
+        response.json({...token});
+      }catch(error){
+        next(Error("Exception occured while handling token"));
+      };
   }
 };
 
@@ -114,7 +101,7 @@ export const handleAuthCode = (request: Request, response: Response) =>{
     if(!code){
         //handle and return error
     }
-    const client_id ='2b01678f-6335-4aae-ba5f-09f1f50619dd'; //meant to be with client
+    const client_id ='2b01678f-6335-4aae-ba5f-09f1f50619dd'; //meant to be with client  //pass with request
     const grant_type = 'authorization_code';
     const redirect_uri = 'http://localhost:5000';
     

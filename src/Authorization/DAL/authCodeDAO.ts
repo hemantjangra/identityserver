@@ -18,6 +18,20 @@ const saveAuthCode = async(authCode: AuthCodeInterface) =>{
   }
 };
 
+const findAuthCodeByCode = async(code:string) =>{
+    try{
+      const result = await AuthCodeModel.findOne({code:code}, {}, {lean: true});
+      return <AuthCodeResults>{
+          authCode: result
+      }
+    }catch(error){
+        return <AuthCodeResults>{
+            error: error
+        }
+    }
+};
+
 module.exports = {
-  saveAuthCode  
+  saveAuthCode,
+  findAuthCodeByCode
 };
