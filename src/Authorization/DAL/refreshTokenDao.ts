@@ -7,9 +7,9 @@ interface RefreshTokenResults{
 
 const saveRefreshToken = async(refreshToken: RefreshTokenInterface) =>{
     try{
-        const savedResuts = await refreshToken.save();
+        const savedResults = await refreshToken.save();
         return <RefreshTokenResults>{
-            refreshToken: savedResuts
+            refreshToken: savedResults
         }
     }catch(error){
         return <RefreshTokenResults>{
