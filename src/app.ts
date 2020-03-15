@@ -41,9 +41,9 @@ app.listen(port, () =>{
    console.log(`Listening to port ${port}`);
 });
 
-app.use((error: AppError, req:Request, res: Response, next:Function)=>{
+app.use((error: Error, req:Request, res: Response, next:Function)=>{
    console.error(error.message);
-   res.status(error.status).send(error.message);
+   res.status(500).send(error.message);
 });
 
 export default app;

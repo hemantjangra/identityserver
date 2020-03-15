@@ -77,7 +77,7 @@ export const handleToken = async (request: Request, response: Response, next: Fu
             refreshToken: refreshTokenEntity.token
         });
         const tokenResult = await tokenDao.saveToken(token); 
-        response.json({...tokenResult.token});
+        response.json({...tokenResult.token?.toObject()});
       }catch(error){
         next(Error("Exception occured while handling token"));
       }
