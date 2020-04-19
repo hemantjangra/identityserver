@@ -16,9 +16,6 @@ const port = process.env.PORT || 5000;
 const db = process.env.DB_URL;
 const dbName = process.env.DB_NAME;
 
-console.log(`DB url is ${db}`);
-console.log(`DB name is ${dbName}`);
-
 if(db && dbName){
    connect(db, dbName);
 }
